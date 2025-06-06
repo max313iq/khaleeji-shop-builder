@@ -1,7 +1,7 @@
 
 import { useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { Menu, X, ShoppingBag, Store, User, Plus } from 'lucide-react';
+import { Menu, X, ShoppingBag, Store, User, Plus, LogIn, UserPlus } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
 const Header = () => {
@@ -12,7 +12,11 @@ const Header = () => {
     { name: 'الرئيسية', href: '/', icon: ShoppingBag },
     { name: 'استكشاف المتاجر', href: '/explore', icon: Store },
     { name: 'إنشاء متجر', href: '/create-store', icon: Plus },
-    { name: 'حسابي', href: '/profile', icon: User },
+  ];
+
+  const authLinks = [
+    { name: 'تسجيل الدخول', href: '/login', icon: LogIn },
+    { name: 'إنشاء حساب', href: '/register', icon: UserPlus },
   ];
 
   const isActive = (path: string) => location.pathname === path;
@@ -54,6 +58,25 @@ const Header = () => {
             })}
           </nav>
 
+          {/* Auth Links - Desktop */}
+          <div className="hidden md:flex items-center space-x-4 rtl:space-x-reverse">
+            {authLinks.map((item) => {
+              const Icon = item.icon;
+              return (
+                <Link key={item.name} to={item.href}>
+                  <Button 
+                    variant={item.href === '/register' ? 'default' : 'outline'}
+                    size="sm"
+                    className="flex items-center space-x-2 rtl:space-x-reverse"
+                  >
+                    <Icon className="h-4 w-4" />
+                    <span>{item.name}</span>
+                  </Button>
+                </Link>
+              );
+            })}
+          </div>
+
           {/* Mobile menu button */}
           <div className="md:hidden">
             <Button
@@ -92,6 +115,24 @@ const Header = () => {
                   </Link>
                 );
               })}
+              
+              {/* Mobile Auth Links */}
+              <div className="border-t border-gray-200 pt-3 mt-3 space-y-2">
+                {authLinks.map((item) => {
+                  const Icon = item.icon;
+                  return (
+                    <Link
+                      key={item.name}
+                      to={item.href}
+                      className="flex items-center space-x-3 rtl:space-x-reverse px-3 py-2 rounded-lg text-base font-medium text-gray-600 hover:text-blue-600 hover:bg-gray-50 transition-all duration-200"
+                      onClick={() => setIsMenuOpen(false)}
+                    >
+                      <Icon className="h-5 w-5" />
+                      <span>{item.name}</span>
+                    </Link>
+                  );
+                })}
+              </div>
             </div>
           </div>
         )}
