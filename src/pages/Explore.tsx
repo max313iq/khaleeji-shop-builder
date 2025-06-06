@@ -10,8 +10,8 @@ const Explore = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('all');
   const [sortBy, setSortBy] = useState('latest');
-  const [viewMode, setViewMode<'grid' | 'list'>('grid');
-  const [stores, setStores] = useState([]);
+  const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
+  const [stores, setStores] = useState<any[]>([]);
 
   // Sample stores data
   const sampleStores = [
