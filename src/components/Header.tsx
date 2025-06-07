@@ -3,6 +3,7 @@ import { useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { Menu, X, ShoppingBag, Store, User, Plus, LogIn, UserPlus } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import ThemeToggle from './ThemeToggle';
 
 const Header = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -11,6 +12,7 @@ const Header = () => {
   const navigation = [
     { name: 'الرئيسية', href: '/', icon: ShoppingBag },
     { name: 'استكشاف المتاجر', href: '/explore', icon: Store },
+    { name: 'المنتجات', href: '/products', icon: Store },
     { name: 'إنشاء متجر', href: '/create-store', icon: Plus },
   ];
 
@@ -58,8 +60,9 @@ const Header = () => {
             })}
           </nav>
 
-          {/* Auth Links - Desktop */}
+          {/* Auth Links and Theme Toggle - Desktop */}
           <div className="hidden md:flex items-center space-x-4 rtl:space-x-reverse">
+            <ThemeToggle />
             {authLinks.map((item) => {
               const Icon = item.icon;
               return (
@@ -78,7 +81,8 @@ const Header = () => {
           </div>
 
           {/* Mobile menu button */}
-          <div className="md:hidden">
+          <div className="md:hidden flex items-center space-x-2 rtl:space-x-reverse">
+            <ThemeToggle />
             <Button
               variant="ghost"
               size="sm"
