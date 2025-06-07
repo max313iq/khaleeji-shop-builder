@@ -1,7 +1,7 @@
 
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { ArrowRight, Star, ShoppingCart, Heart, Share2, MessageCircle, ThumbsUp, Eye, ShieldCheck, Truck, RotateCcw } from 'lucide-react';
+import { ArrowRight, Star, ShoppingCart, Heart, Share2, MessageCircle, ThumbsUp, Eye, ShieldCheck, Truck, RotateCcw, Store } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Textarea } from '@/components/ui/textarea';
