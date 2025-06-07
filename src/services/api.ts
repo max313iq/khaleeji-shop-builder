@@ -88,6 +88,10 @@ export const storesAPI = {
     }),
 
   getById: (id: string) => apiRequest(`/stores/${id}`),
+
+  deleteStore: (id: string) => apiRequest(`/stores/${id}`, {
+    method: 'DELETE',
+  }),
 };
 
 // Products API calls
@@ -107,6 +111,15 @@ export const productsAPI = {
   getAll: (filters?: string) => apiRequest(`/products${filters ? `?${filters}` : ''}`),
 
   getById: (id: string) => apiRequest(`/products/${id}`),
+
+  updateProduct: (id: string, productData: any) => apiRequest(`/products/${id}`, {
+    method: 'PUT',
+    body: JSON.stringify(productData),
+  }),
+
+  deleteProduct: (id: string) => apiRequest(`/products/${id}`, {
+    method: 'DELETE',
+  }),
 
   addRating: (productId: string, rating: number) =>
     apiRequest(`/products/${productId}/ratings`, {
@@ -139,6 +152,18 @@ export const ordersAPI = {
   }),
 
   getMyOrders: () => apiRequest('/orders/my-orders'),
+
+  getAllOrders: () => apiRequest('/orders'),
+
+  updateOrderStatus: (orderId: string, status: string) =>
+    apiRequest(`/orders/${orderId}/status`, {
+      method: 'PATCH',
+      body: JSON.stringify({ status }),
+    }),
+
+  deleteOrder: (orderId: string) => apiRequest(`/orders/${orderId}`, {
+    method: 'DELETE',
+  }),
 };
 
 // Upload API call
@@ -162,4 +187,12 @@ export const uploadAPI = {
 
     return response.json();
   },
+};
+
+// Statistics API calls (for admin dashboard)
+export const statsAPI = {
+  getOverallStats: () => apiRequest('/stats/overview'),
+  getUserStats: () => apiRequest('/stats/users'),
+  getProductStats: () => apiRequest('/stats/products'),
+  getOrderStats: () => apiRequest('/stats/orders'),
 };
