@@ -8,22 +8,25 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { useAuth } from '@/contexts/AuthContext';
+import { productsAPI, uploadAPI } from '@/services/api';
+import { useToast } from '@/hooks/use-toast';
 import Header from '@/components/Header';
 
 const CreateProduct = () => {
   const navigate = useNavigate();
+  const { isStoreOwner } = useAuth();
+  const { toast } = useToast();
+  
   const [formData, setFormData] = useState({
     name: '',
     description: '',
     price: '',
-    discountPrice: '',
     category: '',
-    stock: '',
-    sku: '',
-    weight: '',
-    dimensions: ''
+    stock: ''
   });
   const [images, setImages] = useState<string[]>([]);
+  const [uploading, setUploading] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
 
   const categories = [
@@ -35,6 +38,11 @@ const CreateProduct = () => {
     { value: 'beauty', label: 'جمال وعناية' }
   ];
 
+  if (!isStoreOwner) {
+    navigate('/login');
+    return null;
+  }
+
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
     setFormData(prev => ({
@@ -43,13 +51,31 @@ const CreateProduct = () => {
     }));
   };
 
-  const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = e.target.files;
-    if (files) {
-      // In a real app, you would upload these to a server
-      // For now, we'll just create object URLs for preview
-      const newImages = Array.from(files).map(file => URL.createObjectURL(file));
-      setImages(prev => [...prev, ...newImages].slice(0, 5)); // Max 5 images
+    if (!files) return;
+
+    setUploading(true);
+    try {
+      const uploadPromises = Array.from(files).map(file => uploadAPI.uploadImage(file));
+      const results = await Promise.all(uploadPromises);
+      const newImageUrls = results.map(result => result.url);
+      
+      setImages(prev => [...prev, ...newImageUrls].slice(0, 5)); // Max 5 images
+      
+      toast({
+        title: "تم رفع الصور بنجاح",
+        description: `تم رفع ${newImageUrls.length} صورة`,
+      });
+    } catch (error) {
+      console.error('خطأ في رفع الصور:', error);
+      toast({
+        title: "خطأ في رفع الصور",
+        description: "حدث خطأ أثناء رفع الصور. حاول مرة أخرى.",
+        variant: "destructive"
+      });
+    } finally {
+      setUploading(false);
     }
   };
 
@@ -59,20 +85,50 @@ const CreateProduct = () => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    
+    if (images.length === 0) {
+      toast({
+        title: "صورة مطلوبة",
+        description: "يجب إضافة صورة واحدة على الأقل للمنتج",
+        variant: "destructive"
+      });
+      return;
+    }
+
     setIsLoading(true);
 
-    // TODO: Implement product creation logic
-    console.log('بيانات المنتج:', formData);
-    console.log('الصور:', images);
+    try {
+      const productData = {
+        name: formData.name,
+        description: formData.description,
+        price: parseFloat(formData.price),
+        category: formData.category,
+        stock: parseInt(formData.stock),
+        images: images
+      };
 
-    setTimeout(() => {
+      await productsAPI.create(productData);
+      
+      toast({
+        title: "تم إنشاء المنتج بنجاح!",
+        description: "تم إضافة المنتج إلى متجرك",
+      });
+
+      navigate('/store-management');
+    } catch (error) {
+      console.error('خطأ في إنشاء المنتج:', error);
+      toast({
+        title: "خطأ في إنشاء المنتج",
+        description: "حدث خطأ أثناء إنشاء المنتج. حاول مرة أخرى.",
+        variant: "destructive"
+      });
+    } finally {
       setIsLoading(false);
-      navigate('/dashboard');
-    }, 1000);
+    }
   };
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-background">
       <Header />
       
       <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
@@ -80,14 +136,14 @@ const CreateProduct = () => {
         <div className="mb-8">
           <Button 
             variant="ghost" 
-            onClick={() => navigate('/dashboard')}
+            onClick={() => navigate('/store-management')}
             className="mb-4"
           >
             <ArrowRight className="h-4 w-4 ml-2" />
-            العودة للوحة التحكم
+            العودة لإدارة المتجر
           </Button>
-          <h1 className="text-3xl font-bold text-gray-900 mb-2">إضافة منتج جديد</h1>
-          <p className="text-gray-600">أضف منتجاً جديداً إلى متجرك</p>
+          <h1 className="text-3xl font-bold text-foreground mb-2">إضافة منتج جديد</h1>
+          <p className="text-muted-foreground">أضف منتجاً جديداً إلى متجرك</p>
         </div>
 
         <form onSubmit={handleSubmit}>
@@ -133,6 +189,7 @@ const CreateProduct = () => {
                         id="price"
                         name="price"
                         type="number"
+                        step="0.01"
                         value={formData.price}
                         onChange={handleInputChange}
                         placeholder="0.00"
@@ -141,14 +198,15 @@ const CreateProduct = () => {
                       />
                     </div>
                     <div>
-                      <Label htmlFor="discountPrice">سعر بعد الخصم (ر.س)</Label>
+                      <Label htmlFor="stock">الكمية المتوفرة *</Label>
                       <Input
-                        id="discountPrice"
-                        name="discountPrice"
+                        id="stock"
+                        name="stock"
                         type="number"
-                        value={formData.discountPrice}
+                        value={formData.stock}
                         onChange={handleInputChange}
-                        placeholder="0.00"
+                        placeholder="0"
+                        required
                         className="text-right"
                       />
                     </div>
@@ -163,10 +221,10 @@ const CreateProduct = () => {
                 </CardHeader>
                 <CardContent>
                   <div className="space-y-4">
-                    <div className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center">
-                      <Upload className="h-8 w-8 text-gray-400 mx-auto mb-2" />
-                      <p className="text-sm text-gray-600 mb-2">اسحب الصور هنا أو انقر للرفع</p>
-                      <p className="text-xs text-gray-400">PNG, JPG حتى 5 صور</p>
+                    <div className="border-2 border-dashed border-border rounded-lg p-6 text-center">
+                      <Upload className="h-8 w-8 text-muted-foreground mx-auto mb-2" />
+                      <p className="text-sm text-muted-foreground mb-2">اسحب الصور هنا أو انقر للرفع</p>
+                      <p className="text-xs text-muted-foreground">PNG, JPG حتى 5 صور</p>
                       <Input
                         type="file"
                         multiple
@@ -174,10 +232,11 @@ const CreateProduct = () => {
                         onChange={handleImageUpload}
                         className="hidden"
                         id="image-upload"
+                        disabled={uploading}
                       />
                       <Label htmlFor="image-upload" className="cursor-pointer">
-                        <Button type="button" variant="outline" className="mt-2">
-                          اختر الصور
+                        <Button type="button" variant="outline" className="mt-2" disabled={uploading}>
+                          {uploading ? 'جاري الرفع...' : 'اختر الصور'}
                         </Button>
                       </Label>
                     </div>
@@ -231,57 +290,6 @@ const CreateProduct = () => {
                       </SelectContent>
                     </Select>
                   </div>
-
-                  <div>
-                    <Label htmlFor="stock">الكمية المتوفرة *</Label>
-                    <Input
-                      id="stock"
-                      name="stock"
-                      type="number"
-                      value={formData.stock}
-                      onChange={handleInputChange}
-                      placeholder="0"
-                      required
-                      className="text-right"
-                    />
-                  </div>
-
-                  <div>
-                    <Label htmlFor="sku">رمز المنتج (SKU)</Label>
-                    <Input
-                      id="sku"
-                      name="sku"
-                      value={formData.sku}
-                      onChange={handleInputChange}
-                      placeholder="SKU-001"
-                      className="text-right"
-                    />
-                  </div>
-
-                  <div>
-                    <Label htmlFor="weight">الوزن (كجم)</Label>
-                    <Input
-                      id="weight"
-                      name="weight"
-                      type="number"
-                      value={formData.weight}
-                      onChange={handleInputChange}
-                      placeholder="0.0"
-                      className="text-right"
-                    />
-                  </div>
-
-                  <div>
-                    <Label htmlFor="dimensions">الأبعاد (سم)</Label>
-                    <Input
-                      id="dimensions"
-                      name="dimensions"
-                      value={formData.dimensions}
-                      onChange={handleInputChange}
-                      placeholder="الطول × العرض × الارتفاع"
-                      className="text-right"
-                    />
-                  </div>
                 </CardContent>
               </Card>
 
@@ -289,7 +297,7 @@ const CreateProduct = () => {
                 <Button 
                   type="submit" 
                   className="w-full"
-                  disabled={isLoading}
+                  disabled={isLoading || uploading}
                 >
                   {isLoading ? 'جاري الحفظ...' : 'حفظ المنتج'}
                 </Button>
@@ -297,7 +305,7 @@ const CreateProduct = () => {
                   type="button" 
                   variant="outline" 
                   className="w-full"
-                  onClick={() => navigate('/dashboard')}
+                  onClick={() => navigate('/store-management')}
                 >
                   إلغاء
                 </Button>

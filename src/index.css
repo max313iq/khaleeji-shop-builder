@@ -1,4 +1,6 @@
 
+@import url('https://fonts.googleapis.com/css2?family=Amiri:ital,wght@0,400;0,700;1,400;1,700&family=Cairo:wght@200;300;400;500;600;700;800;900&display=swap');
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -44,7 +46,7 @@
     --sidebar-border: 220 13% 91%;
     --sidebar-ring: 217.2 91.2% 59.8%;
 
-    /* New premium color palette */
+    /* Premium color palette */
     --premium-blue: 220 100% 50%;
     --premium-purple: 270 100% 50%;
     --premium-pink: 330 100% 50%;
@@ -98,9 +100,10 @@
   }
 
   body {
-    @apply bg-background text-foreground;
+    @apply bg-background text-foreground font-cairo;
     background: linear-gradient(135deg, hsl(var(--background)) 0%, hsl(220 20% 98%) 100%);
     min-height: 100vh;
+    direction: rtl;
   }
 
   .dark body {
@@ -148,6 +151,14 @@
 
   .dark .glow {
     box-shadow: 0 0 30px hsl(var(--premium-blue) / 0.5);
+  }
+
+  .font-amiri {
+    font-family: 'Amiri', serif;
+  }
+
+  .font-cairo {
+    font-family: 'Cairo', sans-serif;
   }
 }
 

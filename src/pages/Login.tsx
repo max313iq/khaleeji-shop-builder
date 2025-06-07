@@ -1,13 +1,19 @@
 
 import { useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { LogIn, Eye, EyeOff, ShoppingBag } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { useAuth } from '@/contexts/AuthContext';
+import { useToast } from '@/hooks/use-toast';
 
 const Login = () => {
+  const navigate = useNavigate();
+  const { login } = useAuth();
+  const { toast } = useToast();
+  
   const [formData, setFormData] = useState({
     email: '',
     password: ''
@@ -27,33 +33,43 @@ const Login = () => {
     e.preventDefault();
     setIsLoading(true);
     
-    // TODO: Implement actual login logic with backend
-    console.log('تسجيل الدخول:', formData);
-    
-    // محاكاة تأخير API
-    setTimeout(() => {
+    try {
+      await login(formData.email, formData.password);
+      
+      toast({
+        title: "تم تسجيل الدخول بنجاح",
+        description: "مرحباً بعودتك!",
+      });
+
+      navigate('/dashboard');
+    } catch (error: any) {
+      toast({
+        title: "خطأ في تسجيل الدخول",
+        description: error.message || "تحقق من بياناتك وحاول مرة أخرى",
+        variant: "destructive"
+      });
+    } finally {
       setIsLoading(false);
-      // TODO: إعادة توجيه المستخدم بعد تسجيل الدخول الناجح
-    }, 1000);
+    }
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50 flex items-center justify-center p-4">
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900 flex items-center justify-center p-4">
       <div className="w-full max-w-md">
         {/* Logo and Title */}
         <div className="text-center mb-8">
           <Link to="/" className="inline-flex items-center space-x-2 rtl:space-x-reverse mb-6">
-            <div className="bg-gradient-primary p-3 rounded-xl">
+            <div className="bg-gradient-to-r from-blue-600 to-purple-600 p-3 rounded-xl">
               <ShoppingBag className="h-8 w-8 text-white" />
             </div>
-            <span className="text-2xl font-bold bg-gradient-primary bg-clip-text text-transparent">
+            <span className="text-2xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
               متجري
             </span>
           </Link>
-          <h1 className="text-2xl font-bold text-gray-900 mb-2">
+          <h1 className="text-2xl font-bold text-foreground mb-2">
             مرحباً بعودتك
           </h1>
-          <p className="text-gray-600">
+          <p className="text-muted-foreground">
             سجل دخولك للوصول إلى حسابك
           </p>
         </div>
@@ -100,7 +116,7 @@ const Login = () => {
                   <button
                     type="button"
                     onClick={() => setShowPassword(!showPassword)}
-                    className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                    className="absolute right-3 top-1/2 transform -translate-y-1/2 text-muted-foreground hover:text-foreground"
                   >
                     {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                   </button>
@@ -139,7 +155,7 @@ const Login = () => {
 
             {/* Register Link */}
             <div className="mt-6 text-center">
-              <p className="text-sm text-gray-600">
+              <p className="text-sm text-muted-foreground">
                 ليس لديك حساب؟{' '}
                 <Link
                   to="/register"
@@ -156,7 +172,7 @@ const Login = () => {
         <div className="text-center mt-6">
           <Link
             to="/"
-            className="text-sm text-gray-500 hover:text-gray-700 hover:underline"
+            className="text-sm text-muted-foreground hover:text-foreground hover:underline"
           >
             العودة إلى الصفحة الرئيسية
           </Link>
